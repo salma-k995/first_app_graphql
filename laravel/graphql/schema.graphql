@@ -1,0 +1,82 @@
+#import post.graphql
+scalar DateTime
+    @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+
+scalar Upload
+    @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Upload")
+
+type User {
+    id: ID!
+    name: String!
+    email: String!
+    email_verified_at: DateTime
+    created_at: DateTime!
+    updated_at: DateTime!
+    posts: [Post]! @hasMany(relation: "posts")
+    roles: [Role!]! @belongsToMany
+}
+
+type Role {
+    id: ID!
+    name: String!
+    created_at: DateTime!
+    updated_at: DateTime!
+    users: [User!]! @belongsToMany
+}
+input UserUpdateInput @validator(class: "UserValidator") {
+    name: String
+    password: String
+}
+input ResetInput {
+    password: String
+    token: String
+}
+
+
+
+
+
+type Query {
+    users: [User!] @field(resolver: "UserQueries@users")
+    user(id: ID!): User @field(resolver: "UserQueries@user")
+    me: User @auth(guard: "sanctum")
+
+    userRoles(id: ID!): User
+        # @auth(guard: "sanctum")
+        @field(resolver: "UserQueries@userRoles")
+}
+type LoginResponse {
+    token: String!
+    user: User
+}
+
+type Mutation {
+    userCreate(name: String!, password: String!, email: String!): User
+        @validator(class: "UserValidator")
+        @field(resolver: "UserMutator@userCreate")
+
+    userUpdate(id: ID!, input: UserUpdateInput!): User
+        @field(resolver: "UserMutator@userUpdate")
+
+    userDelete(id: ID!): User @field(resolver: "UserMutator@userDelete")
+
+    login(email: String!, password: String!): LoginResponse
+        @field(resolver: "UserMutator@login")
+
+    logout: String
+        @guard(with: "sanctum")
+        @field(resolver: "UserMutator@logout")
+
+    forgetPassword(email: String!): String
+        @field(resolver: "UserMutator@forgetPassword")
+
+    resetPassword(email: String!, input: ResetInput!): User
+        @field(resolver: "UserMutator@resetPassword")
+
+    upload(file: Upload!): String @field(resolver: "ImageMutator@upload")
+
+
+    createUserRoles(id: ID! , objects: [ID]!): User
+        # @auth(guard: "sanctum")
+        @field(resolver: "UserMutator@createUserRoles")
+}

@@ -1,0 +1,15 @@
+type Post {
+    id: ID!
+    body: String!
+    commentable_type: String!
+    created_at: DateTime!
+    updated_at: DateTime!
+    commentable: Comment! @morphTo
+
+}
+
+
+extend type Query {
+}
+extend type Mutation {
+}
